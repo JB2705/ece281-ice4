@@ -11,8 +11,8 @@
 --| ---------------------------------------------------------------------------
 --|
 --| FILENAME      : stoplight_fsm.vhd
---| AUTHOR(S)     : Capt Phillip Warner, Capt Dan Johnson
---| CREATED       : 02/22/2018, Last Modified 06/24/2020 by Capt Dan Johnson
+--| AUTHOR(S)     : C3C Jonathan Barnett,Capt Phillip Warner, Capt Dan Johnson
+--| CREATED       : 02/22/2018, Last Modified 03/12/2025 by Jonathan Barnett
 --| DESCRIPTION   : This module file implements solution for the HW stoplight example using 
 --|				  : direct hardware mapping (registers and CL) for BINARY encoding.
 --|               : Reset is asynchronous with a default state of yellow.
@@ -72,23 +72,30 @@ end stoplight_fsm;
 architecture stoplight_fsm_arch of stoplight_fsm is 
 	
 	-- create register signals with default state yellow (10)
+	signal f_Q,f_Q_next: STD_LOGIC_VECTOR (1 downto 0):="10";
   
 begin
 	-- CONCURRENT STATEMENTS ----------------------------
 	-- Next state logic
-	
+	f_Q_next(0) <= (not f_Q(1)) AND i_c;
+	f_Q_next(1) <= (not f_Q(1)) AND f_Q(0) AND (not i_c);
 	
 	-- Output logic
+	o_R <= (not f_Q(1)) AND f_Q(0);
+	o_Y <= f_Q(1) AND (not f_Q(0));
+	o_R <= ( (not f_Q(1)) AND (not f_Q(0)) ) OR ( f_Q(1) AND f_Q(0) );
 	
 	-------------------------------------------------------	
 	
 	-- PROCESSES ----------------------------------------	
 	-- state memory w/ asynchronous reset ---------------
-	register_proc : process (  )
+	register_proc : process (i_clk, i_reset  )
 	begin
-			--Reset state is yellow
-
-
+		if i_reset = '1' then
+        f_Q <= "10";        -- reset state is yellow
+        elsif (rising_edge(i_clk)) then
+            f_Q <= f_Q_next;    -- next state becomes current state
+        end if;
 	end process register_proc;
 	-------------------------------------------------------
 	
